@@ -7,6 +7,8 @@ const app = express()
 
 app.use(express.json())
 app.use(cors())
+
+app.use(logRequests)
 app.use('/repositories/:id', validateRepo)
 
 const repositories = []
@@ -60,4 +62,14 @@ function validateRepo(request, response, next) {
 
   request.repoIndex = repoIndex
   return next()
+}
+
+function logRequests(request, response, next) {
+  const { method, url } = request
+
+  const logLabel = `[${method.toUpperCase()}] ${url}`
+  console.time(logLabel)
+
+  next()
+  console.timeEnd(logLabel)
 }
