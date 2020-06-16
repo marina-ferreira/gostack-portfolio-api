@@ -1,17 +1,18 @@
 const express = require("express")
 const cors = require("cors")
-
 const { uuid } = require("uuidv4")
+
+const { logRequests, validateRepo } = require('./middlewares')
 
 const app = express()
 
 app.use(express.json())
 app.use(cors())
 
-app.use(logRequests)
-app.use('/repositories/:id', validateRepo)
-
 const repositories = []
+
+app.use(logRequests)
+app.use('/repositories/:id', validateRepo(repositories))
 
 app.get("/repositories", (request, response) => {
   return response.json(repositories)
@@ -51,25 +52,3 @@ app.post("/repositories/:id/like", (request, response) => {
 })
 
 module.exports = app
-
-function validateRepo(request, response, next) {
-  const { id } = request.params
-  const repoIndex = repositories.findIndex(repo => repo.id === id)
-
-  if (repoIndex < 0) {
-    return response.status(400).json({ error: 'Repository not found.' })
-  }
-
-  request.repoIndex = repoIndex
-  return next()
-}
-
-function logRequests(request, response, next) {
-  const { method, url } = request
-
-  const logLabel = `[${method.toUpperCase()}] ${url}`
-  console.time(logLabel)
-
-  next()
-  console.timeEnd(logLabel)
-}
